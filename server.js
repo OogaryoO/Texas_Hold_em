@@ -109,15 +109,17 @@ async function readJson(req) {
   }
 }
 
-// The BellD Surface strips Set-Cookie, so the client also sends the token in a header.
-function sessionToken(req) {
+// The BellD Surface drops Set-Cookie and the Authorization / custom request headers,
+// so the client sends the token in the JSON body. Headers and the cookie work locally.
+function sessionToken(req, body) {
+  if (typeof body.token === 'string') return body.token;
   const auth = req.headers.authorization ?? '';
   if (auth.startsWith('Bearer ')) return auth.slice(7);
   return req.headers['x-session-token'] ?? decodeURIComponent(cookies(req).get(COOKIE) ?? '');
 }
 
-async function currentUser(req) {
-  const id = readToken(sessionToken(req), secret);
+async function currentUser(req, body) {
+  const id = readToken(sessionToken(req, body), secret);
   return id ? store.getUser(id) : null;
 }
 
@@ -139,10 +141,11 @@ function tablePayload(t, since) {
 async function api(req, res, url) {
   const route = `${req.method} ${url.pathname}`;
   const ip = req.headers['x-forwarded-for']?.split(',')[0].trim() ?? req.socket.remoteAddress;
+  const body = req.method === 'POST' ? await readJson(req) : {};
 
   if (route === 'POST /api/register' || route === 'POST /api/login') {
     if (rateLimited(ip)) return send(res, 429, { error: '嘗試次數太多，請稍後再試' });
-    const { username, password } = await readJson(req);
+    const { username, password } = body;
     const invalid = validateCredentials(username, password);
     if (invalid) return send(res, 400, { error: invalid });
     let user;
@@ -174,22 +177,21 @@ async function api(req, res, url) {
     });
   }
 
-  const user = await currentUser(req);
+  const user = await currentUser(req, body);
   if (!user) return send(res, 401, { error: '請先登入' });
 
-  if (route === 'GET /api/me') {
+  if (route === 'GET /api/me' || route === 'POST /api/me') {
     return send(res, 200, { user: publicUser(user, tables.get(user.id)) });
   }
 
   const t = await tableFor(user);
 
-  if (route === 'GET /api/table') {
-    const since = Number(url.searchParams.get('since')) || 0;
+  if (route === 'GET /api/table' || route === 'POST /api/table') {
+    const since = Number(body.since ?? url.searchParams.get('since')) || 0;
     return send(res, 200, tablePayload(t, since));
   }
 
   if (route === 'POST /api/table/deal' || route === 'POST /api/table/action') {
-    const body = await readJson(req);
     const since = t.seq;
     if (route === 'POST /api/table/deal') t.startHand();
     else t.humanAction(body.action, body.amount);

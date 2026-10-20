@@ -19,14 +19,13 @@ const store = {
 };
 let token = store.get();
 
+// The BellD Surface drops cookies and auth headers, so every POST carries the token in its body.
 async function call(method, url, body) {
-  const headers = body ? { 'content-type': 'application/json' } : {};
-  // Sent in both headers in case a proxy drops one of them.
-  if (token) Object.assign(headers, { authorization: `Bearer ${token}`, 'x-session-token': token });
+  const post = method === 'POST';
   const res = await fetch(url, {
     method,
-    headers,
-    body: body ? JSON.stringify(body) : undefined,
+    headers: post ? { 'content-type': 'application/json' } : {},
+    body: post ? JSON.stringify({ ...body, ...(token ? { token } : {}) }) : undefined,
     credentials: 'same-origin',
   });
   const data = await res.json().catch(() => ({}));
@@ -91,7 +90,7 @@ async function enter(user) {
   $('auth').hidden = true;
   $('game').hidden = false;
   $('log').innerHTML = '';
-  const { frames, state } = await call('GET', '/api/table?since=0');
+  const { frames, state } = await call('POST', '/api/table', { since: 0 });
   for (const f of frames.slice(-40)) addLog(f.msg);
   lastSeq = state.seq;
   current = state;
@@ -282,6 +281,6 @@ function esc(s) {
 narrow.addEventListener('change', () => render(current));
 
 // ---------- boot ----------
-call('GET', '/api/me')
+call('POST', '/api/me')
   .then(({ user }) => enter(user))
   .catch(() => showAuth());
