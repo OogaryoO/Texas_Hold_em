@@ -12,10 +12,20 @@ let current = null;
 let busy = false;
 const queue = [];
 
+const TOKEN_KEY = 'poker_token';
+const store = {
+  get: () => { try { return localStorage.getItem(TOKEN_KEY); } catch { return null; } },
+  set: (v) => { try { v ? localStorage.setItem(TOKEN_KEY, v) : localStorage.removeItem(TOKEN_KEY); } catch {} },
+};
+let token = store.get();
+
 async function call(method, url, body) {
+  const headers = body ? { 'content-type': 'application/json' } : {};
+  // Sent in both headers in case a proxy drops one of them.
+  if (token) Object.assign(headers, { authorization: `Bearer ${token}`, 'x-session-token': token });
   const res = await fetch(url, {
     method,
-    headers: body ? { 'content-type': 'application/json' } : {},
+    headers,
     body: body ? JSON.stringify(body) : undefined,
     credentials: 'same-origin',
   });
@@ -47,7 +57,9 @@ $('auth-form').onsubmit = async (e) => {
   $('auth-error').textContent = '';
   $('auth-submit').disabled = true;
   try {
-    const { user } = await call('POST', `/api/${mode}`, { username: $('username').value.trim(), password: $('password').value });
+    const { user, token: t } = await call('POST', `/api/${mode}`, { username: $('username').value.trim(), password: $('password').value });
+    token = t;
+    store.set(t);
     $('password').value = '';
     await enter(user);
   } catch (err) {
@@ -59,6 +71,8 @@ $('auth-form').onsubmit = async (e) => {
 
 $('btn-logout').onclick = async () => {
   await call('POST', '/api/logout').catch(() => {});
+  token = null;
+  store.set(null);
   me = null;
   showAuth();
 };

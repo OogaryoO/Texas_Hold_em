@@ -109,8 +109,15 @@ async function readJson(req) {
   }
 }
 
+// The BellD Surface strips Set-Cookie, so the client also sends the token in a header.
+function sessionToken(req) {
+  const auth = req.headers.authorization ?? '';
+  if (auth.startsWith('Bearer ')) return auth.slice(7);
+  return req.headers['x-session-token'] ?? decodeURIComponent(cookies(req).get(COOKIE) ?? '');
+}
+
 async function currentUser(req) {
-  const id = readToken(decodeURIComponent(cookies(req).get(COOKIE) ?? ''), secret);
+  const id = readToken(sessionToken(req), secret);
   return id ? store.getUser(id) : null;
 }
 
@@ -148,8 +155,9 @@ async function api(req, res, url) {
         return send(res, 401, { error: '帳號或密碼錯誤' });
       }
     }
-    const cookie = sessionCookie(req, makeToken(user.id, secret), 30 * 24 * 3600);
-    return send(res, 200, { user: publicUser(user, tables.get(user.id)) }, { 'set-cookie': cookie });
+    const token = makeToken(user.id, secret);
+    const cookie = sessionCookie(req, token, 30 * 24 * 3600);
+    return send(res, 200, { user: publicUser(user, tables.get(user.id)), token }, { 'set-cookie': cookie });
   }
 
   if (route === 'POST /api/logout') {
