@@ -1,0 +1,15 @@
+{
+  "name": "texas-holdem-six-max",
+  "version": "1.0.0",
+  "private": true,
+  "description": "六人桌德州撲克：一位真人玩家對五個規則式電腦玩家，帳號與籌碼保存在資料庫",
+  "type": "module",
+  "engines": { "node": "22.x" },
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning server.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "pg": "^8.13.1"
+  }
+}

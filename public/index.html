@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>德州撲克・六人桌</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">♠ 德州撲克 <span>六人桌</span></div>
+    <div id="userbar" class="userbar" hidden>
+      <span id="who"></span>
+      <span class="bankroll">籌碼 <b id="bankroll">0</b></span>
+      <button id="btn-board" class="ghost">排行榜</button>
+      <button id="btn-logout" class="ghost">登出</button>
+    </div>
+  </header>
+
+  <main>
+    <section id="auth" class="auth" hidden>
+      <div class="auth-card">
+        <h1>德州撲克</h1>
+        <p class="muted">你 vs. 五位電腦玩家。註冊即送 5,000 籌碼，每一手的輸贏都會保存。</p>
+        <div class="tabs">
+          <button id="tab-login" class="tab active">登入</button>
+          <button id="tab-register" class="tab">註冊</button>
+        </div>
+        <form id="auth-form">
+          <label>帳號<input id="username" autocomplete="username" required minlength="3" maxlength="16"></label>
+          <label>密碼<input id="password" type="password" autocomplete="current-password" required minlength="6" maxlength="72"></label>
+          <p id="auth-error" class="error" role="alert"></p>
+          <button id="auth-submit" class="primary" type="submit">登入</button>
+        </form>
+      </div>
+    </section>
+
+    <section id="game" class="game" hidden>
+      <div class="table-wrap">
+        <div class="felt">
+          <div class="center">
+            <div id="board" class="board"></div>
+            <div id="pot" class="pot"></div>
+            <div id="banner" class="banner"></div>
+          </div>
+        </div>
+        <div id="seats"></div>
+      </div>
+
+      <div class="controls" id="controls">
+        <div id="idle-controls" class="row">
+          <button id="btn-deal" class="primary big">發牌</button>
+          <button id="btn-refill" class="secondary big" hidden>領取救濟金 1,000</button>
+        </div>
+        <div id="act-controls" class="act" hidden>
+          <div class="row">
+            <button id="btn-fold" class="danger">棄牌</button>
+            <button id="btn-call" class="secondary">過牌</button>
+            <button id="btn-raise" class="primary">加注</button>
+          </div>
+          <div id="raise-box" class="raise-box">
+            <div class="row quick">
+              <button data-q="min" class="chip-btn">最小</button>
+              <button data-q="half" class="chip-btn">½ 池</button>
+              <button data-q="pot" class="chip-btn">1 池</button>
+              <button data-q="all" class="chip-btn">全下</button>
+            </div>
+            <div class="row">
+              <input id="raise-range" type="range" step="10">
+              <input id="raise-input" type="number" step="10" inputmode="numeric">
+            </div>
+          </div>
+        </div>
+        <div id="wait" class="wait" hidden>電腦玩家思考中…</div>
+      </div>
+
+      <details class="log-box">
+        <summary>牌局紀錄</summary>
+        <ol id="log"></ol>
+      </details>
+    </section>
+  </main>
+
+  <dialog id="board-dialog">
+    <h2>排行榜</h2>
+    <table class="lb">
+      <thead><tr><th>#</th><th>玩家</th><th>籌碼</th><th>手數</th><th>勝</th><th>最大底池</th></tr></thead>
+      <tbody id="lb-body"></tbody>
+    </table>
+    <form method="dialog"><button class="primary">關閉</button></form>
+  </dialog>
+
+  <script type="module" src="/app.js"></script>
+</body>
+</html>
