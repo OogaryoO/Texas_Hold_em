@@ -25,7 +25,7 @@ npm test           # 牌型比較與 1,500 手籌碼守恆測試
 
 | 條件 | 儲存 |
 | --- | --- |
-| 設定了 `DATABASE_URL` | PostgreSQL（TLS，pool 斷線自動重連） |
+| 設定了 `DATABASE_URL` | PostgreSQL（TLS 並驗證憑證，pool 斷線自動重連） |
 | 否則 | 內建 `node:sqlite`，檔案在 `DATA_DIR`（預設 `./data`，不可寫時改用系統暫存目錄） |
 | Node 版本沒有 `node:sqlite` | JSON 檔（備援，確保服務仍能啟動） |
 

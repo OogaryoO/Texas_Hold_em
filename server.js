@@ -78,10 +78,10 @@ function send(res, status, body, headers = {}) {
 }
 
 function cookies(req) {
-  const out = {};
+  const out = new Map();
   for (const part of (req.headers.cookie ?? '').split(';')) {
     const i = part.indexOf('=');
-    if (i > 0) out[part.slice(0, i).trim()] = decodeURIComponent(part.slice(i + 1).trim());
+    if (i > 0) out.set(part.slice(0, i).trim(), part.slice(i + 1).trim());
   }
   return out;
 }
@@ -110,7 +110,7 @@ async function readJson(req) {
 }
 
 async function currentUser(req) {
-  const id = readToken(cookies(req)[COOKIE], secret);
+  const id = readToken(decodeURIComponent(cookies(req).get(COOKIE) ?? ''), secret);
   return id ? store.getUser(id) : null;
 }
 

@@ -135,8 +135,8 @@ class PgStore {
 
   async init() {
     const { default: pg } = await import('pg');
-    const ssl = process.env.PGSSL === 'disable' ? false : { rejectUnauthorized: false };
-    this.pool = new pg.Pool({ connectionString: this.url, ssl, max: 5 });
+    // TLS with certificate verification; BellD only allows PostgreSQL over TLS.
+    this.pool = new pg.Pool({ connectionString: this.url, ssl: true, max: 5 });
     // The platform proxy can drop idle connections; the pool reconnects on next query.
     this.pool.on('error', (err) => console.warn('[db] idle client error:', err.message));
     await this.pool.query(`
